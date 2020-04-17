@@ -10,20 +10,14 @@ def pytest_reporter_modify_env(env, config):
     pass
 
 
-@pytest.hookspec(firstresult=True)
-def pytest_reporter_template(env, name, config):
-    pass
-
-
 def pytest_reporter_context(config):
     pass
 
 
 @pytest.hookspec(firstresult=True)
-def pytest_reporter_render(template, context):
+def pytest_reporter_render(env, template, context):
     pass
 
 
-@pytest.hookspec(firstresult=True)
-def pytest_reporter_save(content, path, env, config):
+def pytest_reporter_finish(path, env, context, config):
     pass

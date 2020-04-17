@@ -8,6 +8,8 @@ black = "==19.10b0"
 
 [packages]
 pytest-reporter = {editable = true,path = "."}
+mako = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.7"

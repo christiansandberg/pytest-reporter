@@ -1,7 +1,4 @@
-import os.path
 from pathlib import Path
-import datetime
-from collections import namedtuple
 import logging
 
 import pytest
@@ -16,7 +13,13 @@ def pytest_addoption(parser):
         help="path to report output.",
     )
     group.addoption(
-        "--template-name",
+        "--template-engine",
+        choices=["jinja2", "mako"],
+        default="jinja2",
+        help="template engine to use.",
+    )
+    group.addoption(
+        "--template",
         action="append",
         default=["default/index.html"],
         help="path to report template relative to --template-dir.",
@@ -37,28 +40,32 @@ def pytest_addhooks(pluginmanager):
 
 def pytest_configure(config):
     is_slave = hasattr(config, "slaveinput")
-    template = config.getoption("--template-name")
     config.template_context = {
         "config": config,
         "test_items": [],
     }
     if config.getoption("--report-path") and not is_slave:
-        from . import default
-        config.pluginmanager.register(default)
+        from .engines import jinja2, mako
+        from .templates.default import conftest as default
         config._reporter = ReportGenerator(config)
         config.pluginmanager.register(config._reporter)
-        if "default/index.html" in template:
-            from .templates.default import conftest
-            config.pluginmanager.register(conftest)
+        config.pluginmanager.register(jinja2)
+        config.pluginmanager.register(mako)
+        config.pluginmanager.register(default)
 
 
-class TestItem:
+def pytest_reporter_context(config):
+    return config.template_context
+
+
+class TestRun:
     def __init__(self, item):
         self.item = item
         self.phases = []
         self.category = ""
         self.letter = ""
         self.word = ""
+        self.style = {}
 
     def append_phase(self, phase):
         self.phases.append(phase)
@@ -66,6 +73,7 @@ class TestItem:
             self.category = phase.category
             self.letter = phase.letter
             self.word = phase.word
+            self.style = phase.style
 
 
 class TestPhase:
@@ -76,7 +84,9 @@ class TestPhase:
         res = config.hook.pytest_report_teststatus(report=report, config=config)
         self.category, self.letter, self.word = res
         if isinstance(self.word, tuple):
-            self.word = self.word[0]
+            self.word, self.style = self.word
+        else:
+            self.style = {}
 
 
 class ReportGenerator:
@@ -89,7 +99,7 @@ class ReportGenerator:
         logging.getLogger().addHandler(self._log_handler)
 
     def pytest_runtest_protocol(self, item):
-        self._active = TestItem(item)
+        self._active = TestRun(item)
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item, call):
@@ -115,18 +125,18 @@ class ReportGenerator:
         ctx = {}
         for context in contexts:
             ctx.update(context)
-        for template_name, output_path in zip(
-            config.getoption("--template-name"), config.getoption("--report-path")
+        for template, path in zip(
+            config.getoption("--template"), config.getoption("--report-path")
         ):
-            # Get a template from --template-name and environment
-            template = config.hook.pytest_reporter_template(
-                env=env, name=template_name, config=config
+            content = config.hook.pytest_reporter_render(
+                env=env, template=template, context=ctx
             )
-            # Render content from template and context
-            content = config.hook.pytest_reporter_render(template=template, context=ctx)
             # Save content to file
-            config.hook.pytest_reporter_save(
-                content=content, path=output_path, env=env, config=config
+            target = Path(path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content)
+            config.hook.pytest_reporter_finish(
+                path=path, env=env, context=ctx, config=config
             )
 
 
