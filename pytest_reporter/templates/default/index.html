@@ -1,0 +1,48 @@
+{% extends "default/base.html" %}
+{% block header %}
+<h1>Test Report</h1>
+{% endblock %}
+{% block content %}
+<ol>
+    {% for fspath, tests in test_items|groupby('item.fspath') %}
+    <li>
+        <h3>{{ fspath|replace(config.rootdir, '') }}</h3>
+        <div class="letters">
+        {% for test in tests %}
+            {% for phase in test.phases if phase.letter %}
+                <span class="{{ phase.category }}">{{ phase.letter }}</span>
+            {% endfor %}
+        {% endfor %}
+        </div>
+{#
+    <td class="result">{{ test.word }}</td>
+    <td class="nodeid">{{ test.item.nodeid }}</td>
+    <td class="started">{{ test.phases|map(attribute='call.start')|first|datetime|strftime('%H:%M:%S.%f') }}</td>
+    <td class="duration">{{ test.phases|sum('report.duration')|round(1) }}s</td>
+        {% for phase in test.phases %}
+        <li class="{{ phase.report.when }} {{ phase.category }}">
+            <h3>{{ phase.report.when|title }}</h3>
+            <div>{{ phase.word }}</div>
+            <span>
+                {{ phase.call.start|datetime|strftime('%H:%M:%S.%f') }}
+            </span>
+            <pre><code>{{ phase.report.longrepr }}</code></pre>
+            <ol>
+                {% for record in phase.log_records %}
+                <li>{{ record.message }}</li>
+                {% endfor %}
+            </ol>
+            {% for section, content in phase.report.sections %}
+                <h4>{{ section }}</h4>
+                <div>
+                    {{ content }}
+                </div>
+            {% endfor %}
+        </li>
+        {% endfor %}
+#}
+    </li>
+    {% endfor %}
+</ol>
+<pre><code>{% debug %}</code></pre>
+{% endblock %}
