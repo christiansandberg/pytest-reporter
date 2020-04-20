@@ -1,6 +1,10 @@
 import pytest
 
 
+def pytest_reporter_template_dir(config):
+    pass
+
+
 @pytest.hookspec(firstresult=True)
 def pytest_reporter_make_env(template_dirs, config):
     pass

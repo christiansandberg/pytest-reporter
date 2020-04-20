@@ -1,3 +1,4 @@
+import pytest_reporter
 import pytest
 from jinja2 import (
     Environment,
@@ -12,15 +13,10 @@ from jinja2 import (
 def pytest_reporter_make_env(template_dirs, config):
     if config.getoption("--template-engine") == "jinja2":
         return Environment(
-            loader=ChoiceLoader(
-                [
-                    FileSystemLoader(template_dirs),
-                    PackageLoader("pytest_reporter", "templates"),
-                ]
-            ),
+            loader=FileSystemLoader(template_dirs),
             autoescape=select_autoescape(["html", "htm", "xml"]),
-            trim_blocks=True,
-            lstrip_blocks=True,
+            # trim_blocks=True,
+            # lstrip_blocks=True,
         )
 
 

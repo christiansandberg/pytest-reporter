@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name='pytest-reporter',
-    version='0.1.0',
+    version='0.1.0.a1',
     author='Christian Sandberg',
     author_email='christiansandberg@me.com',
     maintainer='Christian Sandberg',
@@ -26,7 +26,6 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'pytest',
-        'Jinja2',
     ],
     classifiers=[
         'Development Status :: 1 - Planning',

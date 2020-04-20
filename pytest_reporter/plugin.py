@@ -9,7 +9,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--report-path",
         action="append",
-        default=["report.html"],
+        default=[],
         help="path to report output.",
     )
     group.addoption(
@@ -21,7 +21,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--template",
         action="append",
-        default=["default/index.html"],
+        default=[],
         help="path to report template relative to --template-dir.",
     )
     group.addoption(
@@ -42,20 +42,23 @@ def pytest_configure(config):
     is_slave = hasattr(config, "slaveinput")
     config.template_context = {
         "config": config,
-        "test_items": [],
+        "test_runs": [],
     }
     if config.getoption("--report-path") and not is_slave:
         from .engines import jinja2, mako
-        from .templates.default import conftest as default
         config._reporter = ReportGenerator(config)
         config.pluginmanager.register(config._reporter)
         config.pluginmanager.register(jinja2)
         config.pluginmanager.register(mako)
-        config.pluginmanager.register(default)
 
 
 def pytest_reporter_context(config):
     return config.template_context
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_reporter_template_dir(config):
+    return config.getoption("--template-dir")
 
 
 class TestRun:
@@ -110,14 +113,21 @@ class ReportGenerator:
         self._active.append_phase(phase)
 
     def pytest_runtest_logfinish(self):
-        self.config.template_context["test_items"].append(self._active)
+        self.config.template_context["test_runs"].append(self._active)
 
     def pytest_sessionfinish(self, session):
         config = session.config
         logging.getLogger().removeHandler(self._log_handler)
         # Create a template environment or template lookup object
-        dirs = config.getoption("--template-dir")
-        env = config.hook.pytest_reporter_make_env(template_dirs=dirs, config=config)
+        template_dirs = []
+        for dirs in config.hook.pytest_reporter_template_dir(config=config):
+            if isinstance(dirs, list):
+                template_dirs.extend(dirs)
+            else:
+                template_dirs.append(dirs)
+        env = config.hook.pytest_reporter_make_env(
+            template_dirs=template_dirs, config=config
+        )
         # Allow modification
         config.hook.pytest_reporter_modify_env(env=env, config=config)
         # Generate context
