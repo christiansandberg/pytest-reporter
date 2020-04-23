@@ -61,59 +61,61 @@ def pytest_reporter_template_dir(config):
     return config.getoption("--template-dir")
 
 
-class TestRun:
-    def __init__(self, item):
-        self.item = item
-        self.phases = []
-        self.category = ""
-        self.letter = ""
-        self.word = ""
-        self.style = {}
-
-    def append_phase(self, phase):
-        self.phases.append(phase)
-        if phase.letter or phase.word:
-            self.category = phase.category
-            self.letter = phase.letter
-            self.word = phase.word
-            self.style = phase.style
-
-
-class TestPhase:
-    def __init__(self, call, report, log_records, config):
-        self.call = call
-        self.report = report
-        self.log_records = log_records
-        res = config.hook.pytest_report_teststatus(report=report, config=config)
-        self.category, self.letter, self.word = res
-        if isinstance(self.word, tuple):
-            self.word, self.style = self.word
-        else:
-            self.style = {}
-
-
 class ReportGenerator:
     def __init__(self, config):
         self.config = config
-        self._active = None
+        self._active_item = None
+        self._active_log = None
         self._log_handler = LogHandler()
 
     def pytest_sessionstart(self, session):
         logging.getLogger().addHandler(self._log_handler)
 
     def pytest_runtest_protocol(self, item):
-        self._active = TestRun(item)
+        self._active_item = item
+    
+    def pytest_runtest_logstart(self):
+        self._active_log = {
+            "item": self._active_item,
+            "phases": [],
+            "status": {
+                "category": "",
+                "letter": "",
+                "word": "",
+                "style": {},
+            },
+        }
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item, call):
+        config = item.session.config
         outcome = yield
         report = outcome.get_result()
         log_records = self._log_handler.pop_records()
-        phase = TestPhase(call, report, log_records, self.config)
-        self._active.append_phase(phase)
+        category, letter, word = config.hook.pytest_report_teststatus(
+            report=report, config=config
+        )
+        if isinstance(word, tuple):
+            word, style = word
+        else:
+            style = {}
+        phase = {
+            "call": call,
+            "report": report,
+            "log_records": log_records,
+            "status": {
+                "category": category,
+                "letter": letter,
+                "word": word,
+                "style": style,
+            }
+        }
+        self._active_log["phases"].append(phase)
+        if letter or word:
+            self._active_log["status"] = phase["status"]
 
     def pytest_runtest_logfinish(self):
-        self.config.template_context["test_runs"].append(self._active)
+        self.config.template_context["test_runs"].append(self._active_log)
 
     def pytest_sessionfinish(self, session):
         config = session.config
