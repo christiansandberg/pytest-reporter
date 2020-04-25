@@ -14,7 +14,7 @@ def pytest_reporter_modify_env(env, config):
     pass
 
 
-def pytest_reporter_context(config):
+def pytest_reporter_context(context, config):
     pass
 
 

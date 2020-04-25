@@ -46,19 +46,37 @@ def pytest_configure(config):
     }
     if config.getoption("--report-path") and not is_slave:
         from .engines import jinja2, mako
+
         config._reporter = ReportGenerator(config)
         config.pluginmanager.register(config._reporter)
         config.pluginmanager.register(jinja2)
         config.pluginmanager.register(mako)
 
 
-def pytest_reporter_context(config):
-    return config.template_context
-
-
 @pytest.hookimpl(tryfirst=True)
 def pytest_reporter_template_dir(config):
     return config.getoption("--template-dir")
+
+
+def pytest_reporter_context(context, config):
+    """Add status to test runs and phases."""
+    for run in context["test_runs"]:
+        for phase in run["phases"]:
+            category, letter, word = config.hook.pytest_report_teststatus(
+                report=phase["report"], config=config
+            )
+            if isinstance(word, tuple):
+                word, style = word
+            else:
+                style = {}
+            phase["status"] = {
+                "category": category,
+                "letter": letter,
+                "word": word,
+                "style": style,
+            }
+            if letter or word:
+                run["status"] = phase["status"]
 
 
 class ReportGenerator:
@@ -73,49 +91,23 @@ class ReportGenerator:
 
     def pytest_runtest_protocol(self, item):
         self._active_item = item
-    
+
     def pytest_runtest_logstart(self):
         self._active_log = {
             "item": self._active_item,
             "phases": [],
-            "status": {
-                "category": "",
-                "letter": "",
-                "word": "",
-                "style": {},
-            },
         }
+        self.config.template_context["test_runs"].append(self._active_log)
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item, call):
-        config = item.session.config
+        phase = {}
+        self._active_log["phases"].append(phase)
+        phase["call"] = call
         outcome = yield
         report = outcome.get_result()
-        log_records = self._log_handler.pop_records()
-        category, letter, word = config.hook.pytest_report_teststatus(
-            report=report, config=config
-        )
-        if isinstance(word, tuple):
-            word, style = word
-        else:
-            style = {}
-        phase = {
-            "call": call,
-            "report": report,
-            "log_records": log_records,
-            "status": {
-                "category": category,
-                "letter": letter,
-                "word": word,
-                "style": style,
-            }
-        }
-        self._active_log["phases"].append(phase)
-        if letter or word:
-            self._active_log["status"] = phase["status"]
-
-    def pytest_runtest_logfinish(self):
-        self.config.template_context["test_runs"].append(self._active_log)
+        phase["report"] = report
+        phase["log_records"] = self._log_handler.pop_records()
 
     def pytest_sessionfinish(self, session):
         config = session.config
@@ -133,22 +125,20 @@ class ReportGenerator:
         # Allow modification
         config.hook.pytest_reporter_modify_env(env=env, config=config)
         # Generate context
-        contexts = config.hook.pytest_reporter_context(config=config)
-        ctx = {}
-        for context in contexts:
-            ctx.update(context)
+        context = config.template_context
+        config.hook.pytest_reporter_context(context=context, config=config)
         for template, path in zip(
             config.getoption("--template"), config.getoption("--report-path")
         ):
             content = config.hook.pytest_reporter_render(
-                env=env, template=template, context=ctx
+                env=env, template=template, context=context
             )
             # Save content to file
             target = Path(path)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content)
             config.hook.pytest_reporter_finish(
-                path=path, env=env, context=ctx, config=config
+                path=path, env=env, context=context, config=config
             )
 
 
