@@ -80,6 +80,18 @@ def pytest_reporter_context(context, config):
                 run["status"] = phase["status"]
 
 
+@pytest.fixture(scope="session")
+def session_context(pytestconfig):
+    """Report template context for session."""
+    return pytestconfig.template_context
+
+
+@pytest.fixture(scope="function")
+def function_context(pytestconfig):
+    """Report template context for the current function."""
+    return pytestconfig._reporter._active_log
+
+
 class ReportGenerator:
     def __init__(self, config):
         self.config = config
