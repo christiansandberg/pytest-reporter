@@ -1,16 +1,17 @@
 from pathlib import Path
 import logging
+import time
 
 import pytest
 
 
 def pytest_addoption(parser):
-    group = parser.getgroup("terminal reporting")
+    group = parser.getgroup("report generation")
     group.addoption(
-        "--report-path",
+        "--report",
         action="append",
         default=[],
-        help="path to report output.",
+        help="path to report output (combined with --template).",
     )
     group.addoption(
         "--template-engine",
@@ -44,7 +45,7 @@ def pytest_configure(config):
         "config": config,
         "test_runs": [],
     }
-    if config.getoption("--report-path") and not is_slave:
+    if config.getoption("--report") and not is_slave:
         from .engines import jinja2, mako
 
         config._reporter = ReportGenerator(config)
@@ -87,6 +88,7 @@ class ReportGenerator:
         self._log_handler = LogHandler()
 
     def pytest_sessionstart(self, session):
+        self.config.template_context["started"] = time.time()
         logging.getLogger().addHandler(self._log_handler)
 
     def pytest_runtest_protocol(self, item):
@@ -111,6 +113,7 @@ class ReportGenerator:
 
     def pytest_sessionfinish(self, session):
         config = session.config
+        config.template_context["ended"] = time.time()
         logging.getLogger().removeHandler(self._log_handler)
         # Create a template environment or template lookup object
         template_dirs = []
@@ -128,7 +131,7 @@ class ReportGenerator:
         context = config.template_context
         config.hook.pytest_reporter_context(context=context, config=config)
         for template, path in zip(
-            config.getoption("--template"), config.getoption("--report-path")
+            config.getoption("--template"), config.getoption("--report")
         ):
             content = config.hook.pytest_reporter_render(
                 env=env, template=template, context=context
