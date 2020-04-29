@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name='pytest-reporter',
-    version='0.1.0.a1',
+    version='0.1.0a1',
     author='Christian Sandberg',
     author_email='christiansandberg@me.com',
     maintainer='Christian Sandberg',
@@ -28,7 +28,7 @@ setup(
         'pytest',
     ],
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 3 - Alpha',
         'Framework :: Pytest',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Testing',
