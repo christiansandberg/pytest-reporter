@@ -43,7 +43,7 @@ def pytest_configure(config):
     is_slave = hasattr(config, "slaveinput")
     config.template_context = {
         "config": config,
-        "test_runs": [],
+        "tests": [],
     }
     if config.getoption("--report") and not is_slave:
         from .engines import jinja2, mako
@@ -61,7 +61,7 @@ def pytest_reporter_template_dir(config):
 
 def pytest_reporter_context(context, config):
     """Add status to test runs and phases."""
-    for run in context["test_runs"]:
+    for run in context["tests"]:
         for phase in run["phases"]:
             category, letter, word = config.hook.pytest_report_teststatus(
                 report=phase["report"], config=config
@@ -111,7 +111,7 @@ class ReportGenerator:
             "item": self._active_item,
             "phases": [],
         }
-        self.config.template_context["test_runs"].append(self._active_log)
+        self.config.template_context["tests"].append(self._active_log)
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item, call):
