@@ -1,6 +1,7 @@
 from pathlib import Path
 import logging
 import time
+import warnings
 
 import pytest
 
@@ -14,16 +15,10 @@ def pytest_addoption(parser):
         help="path to report output (combined with --template).",
     )
     group.addoption(
-        "--template-engine",
-        choices=["jinja2", "mako"],
-        default="jinja2",
-        help="template engine to use.",
-    )
-    group.addoption(
         "--template",
         action="append",
         default=[],
-        help="path to report template relative to --template-dir.",
+        help="name or path to report template relative to --template-dir.",
     )
     group.addoption(
         "--template-dir",
@@ -44,18 +39,15 @@ def pytest_configure(config):
     config.template_context = {
         "config": config,
         "tests": [],
+        "warnings": [],
     }
     if config.getoption("--report") and not is_slave:
-        from .engines import jinja2, mako
-
         config._reporter = ReportGenerator(config)
         config.pluginmanager.register(config._reporter)
-        config.pluginmanager.register(jinja2)
-        config.pluginmanager.register(mako)
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_reporter_template_dir(config):
+def pytest_reporter_template_dirs(config):
     return config.getoption("--template-dir")
 
 
@@ -89,72 +81,79 @@ def session_context(pytestconfig):
 @pytest.fixture(scope="function")
 def function_context(pytestconfig):
     """Report template context for the current function."""
-    return pytestconfig._reporter._active_log
+    if hasattr(pytestconfig, "_reporter"):
+        return pytestconfig._reporter._active_test
+    else:
+        return {}
 
 
 class ReportGenerator:
     def __init__(self, config):
         self.config = config
+        self.context = config.template_context
+        self._loaders = []
         self._active_item = None
-        self._active_log = None
+        self._active_test = None
         self._log_handler = LogHandler()
+        self._reports = set()
 
     def pytest_sessionstart(self, session):
-        self.config.template_context["started"] = time.time()
+        self.context["started"] = time.time()
         logging.getLogger().addHandler(self._log_handler)
 
     def pytest_runtest_protocol(self, item):
         self._active_item = item
 
     def pytest_runtest_logstart(self):
-        self._active_log = {
+        self._active_test = {
             "item": self._active_item,
             "phases": [],
         }
-        self.config.template_context["tests"].append(self._active_log)
+        self.context["tests"].append(self._active_test)
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item, call):
-        phase = {}
-        self._active_log["phases"].append(phase)
-        phase["call"] = call
+        phase = {"call": call}
+        self._active_test["phases"].append(phase)
         outcome = yield
         report = outcome.get_result()
         phase["report"] = report
         phase["log_records"] = self._log_handler.pop_records()
 
+    def pytest_warning_captured(self, warning_message):
+        self.context["warnings"].append(warning_message)
+
     def pytest_sessionfinish(self, session):
-        config = session.config
-        config.template_context["ended"] = time.time()
+        self.context["ended"] = time.time()
         logging.getLogger().removeHandler(self._log_handler)
-        # Create a template environment or template lookup object
-        template_dirs = []
-        for dirs in config.hook.pytest_reporter_template_dir(config=config):
-            if isinstance(dirs, list):
-                template_dirs.extend(dirs)
-            else:
-                template_dirs.append(dirs)
-        env = config.hook.pytest_reporter_make_env(
-            template_dirs=template_dirs, config=config
-        )
-        # Allow modification
-        config.hook.pytest_reporter_modify_env(env=env, config=config)
-        # Generate context
-        context = config.template_context
-        config.hook.pytest_reporter_context(context=context, config=config)
-        for template, path in zip(
+        self.config.hook.pytest_reporter_save(config=self.config)
+
+    def pytest_reporter_save(self, config):
+        # Create a list of all directories that may contain templates
+        dirs_list = config.hook.pytest_reporter_template_dirs(config=config)
+        dirs = [d for dirs in dirs_list for d in dirs]
+        config.hook.pytest_reporter_context(context=self.context, config=config)
+        for name, path in zip(
             config.getoption("--template"), config.getoption("--report")
         ):
             content = config.hook.pytest_reporter_render(
-                env=env, template=template, context=context
+                template_name=name, dirs=dirs, context=self.context
             )
+            if content is None:
+                warnings.warn("No template found with name '%s'" % name)
+                continue
             # Save content to file
             target = Path(path)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content)
             config.hook.pytest_reporter_finish(
-                path=path, env=env, context=context, config=config
+                path=path, context=self.context, config=config
             )
+            self._reports.add(target)
+
+    def pytest_terminal_summary(self, terminalreporter):
+        for report in self._reports:
+            terminalreporter.write_sep("-", "generated report: %s" % report.resolve())
 
 
 class LogHandler(logging.Handler):
