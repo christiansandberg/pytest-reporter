@@ -5,6 +5,10 @@ def pytest_reporter_template_dirs(config):
     pass
 
 
+def pytest_reporter_loader(dirs, config):
+    pass
+
+
 def pytest_reporter_context(context, config):
     pass
 

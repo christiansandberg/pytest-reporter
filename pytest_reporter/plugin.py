@@ -132,6 +132,7 @@ class ReportGenerator:
         # Create a list of all directories that may contain templates
         dirs_list = config.hook.pytest_reporter_template_dirs(config=config)
         dirs = [d for dirs in dirs_list for d in dirs]
+        config.hook.pytest_reporter_loader(dirs=dirs, config=config)
         config.hook.pytest_reporter_context(context=self.context, config=config)
         for name, path in zip(
             config.getoption("--template"), config.getoption("--report")
@@ -147,7 +148,7 @@ class ReportGenerator:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content)
             config.hook.pytest_reporter_finish(
-                path=path, context=self.context, config=config
+                path=target, context=self.context, config=config
             )
             self._reports.add(target)
 
