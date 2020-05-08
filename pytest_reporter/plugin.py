@@ -53,8 +53,8 @@ def pytest_reporter_template_dirs(config):
 
 def pytest_reporter_context(context, config):
     """Add status to test runs and phases."""
-    for run in context["tests"]:
-        for phase in run["phases"]:
+    for test in context["tests"]:
+        for phase in test["phases"]:
             category, letter, word = config.hook.pytest_report_teststatus(
                 report=phase["report"], config=config
             )
@@ -69,7 +69,7 @@ def pytest_reporter_context(context, config):
                 "style": style,
             }
             if letter or word:
-                run["status"] = phase["status"]
+                test["status"] = phase["status"]
 
 
 @pytest.fixture(scope="session")
@@ -109,16 +109,18 @@ class ReportGenerator:
             "item": self._active_item,
             "phases": [],
         }
+
+    def pytest_runtest_logfinish(self):
         self.context["tests"].append(self._active_test)
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item, call):
         phase = {"call": call}
-        self._active_test["phases"].append(phase)
         outcome = yield
         report = outcome.get_result()
         phase["report"] = report
         phase["log_records"] = self._log_handler.pop_records()
+        self._active_test["phases"].append(phase)
 
     def pytest_warning_captured(self, warning_message):
         self.context["warnings"].append(warning_message)
