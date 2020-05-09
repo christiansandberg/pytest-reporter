@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name='pytest-reporter',
-    version='0.2.0',
+    version='0.3.0',
     author='Christian Sandberg',
     author_email='christiansandberg@me.com',
     maintainer='Christian Sandberg',

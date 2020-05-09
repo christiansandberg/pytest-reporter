@@ -68,12 +68,12 @@ def pytest_reporter_context(context, config):
                 "word": word,
                 "style": style,
             }
-            if letter or word:
+            if letter or word or "status" not in test:
                 test["status"] = phase["status"]
 
 
 @pytest.fixture(scope="session")
-def session_context(pytestconfig):
+def template_context(pytestconfig):
     """Report template context for session."""
     return pytestconfig.template_context
 
@@ -98,6 +98,7 @@ class ReportGenerator:
         self._reports = set()
 
     def pytest_sessionstart(self, session):
+        self.context["session"] = session
         self.context["started"] = time.time()
         logging.getLogger().addHandler(self._log_handler)
 
