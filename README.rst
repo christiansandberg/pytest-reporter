@@ -38,7 +38,9 @@ it is up to each template to implement the rendering (or use another template
 plugin as base). A minimal template may just implement the
 ``pytest_reporter_render`` hook.
 
-This is a very basic Jinja2 template implementation::
+This is a very basic Jinja2 template implementation:
+
+.. code:: python
 
     from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
@@ -111,7 +113,6 @@ Issues
 If you encounter any problems, please `file an issue`_ along with a detailed description.
 
 .. _`pytest-reporter-html1`: https://pypi.org/project/pytest-reporter-html1
-.. _`Jinja2`: https://jinja.palletsprojects.com/
 .. _`MIT`: http://opensource.org/licenses/MIT
 .. _`file an issue`: https://github.com/christiansandberg/pytest-reporter/issues
 .. _`pytest`: https://github.com/pytest-dev/pytest
