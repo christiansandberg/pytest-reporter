@@ -8,7 +8,7 @@ def pytest_reporter_template_dirs(config):
 
 def pytest_reporter_loader(dirs, config):
     """Create a template loader, environment, or equivalent.
-    
+
     The return value is currently not used. The plugin should keep track of it
     itself and may re-use it in other hooks.
     """
@@ -26,7 +26,7 @@ def pytest_reporter_context(context, config):
 @pytest.hookspec(firstresult=True)
 def pytest_reporter_render(template_name, dirs, context):
     """Called to render content given a template name and context.
-    
+
     Should return a string if the template was found.
     """
     pass
