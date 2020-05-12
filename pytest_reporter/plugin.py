@@ -2,6 +2,7 @@ from pathlib import Path
 import logging
 import time
 import warnings
+from itertools import chain
 
 import pytest
 
@@ -134,7 +135,7 @@ class ReportGenerator:
     def pytest_reporter_save(self, config):
         # Create a list of all directories that may contain templates
         dirs_list = config.hook.pytest_reporter_template_dirs(config=config)
-        dirs = [d for dirs in dirs_list for d in dirs]
+        dirs = list(chain.from_iterable(dirs_list))
         config.hook.pytest_reporter_loader(dirs=dirs, config=config)
         config.hook.pytest_reporter_context(context=self.context, config=config)
         for name, path in zip(
