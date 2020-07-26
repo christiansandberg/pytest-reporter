@@ -36,13 +36,13 @@ def pytest_addhooks(pluginmanager):
 
 
 def pytest_configure(config):
-    is_slave = hasattr(config, "slaveinput")
+    is_worker = hasattr(config, "workerinput")
     config.template_context = {
         "config": config,
         "tests": [],
         "warnings": [],
     }
-    if config.getoption("--report") and not is_slave:
+    if config.getoption("--report") and not is_worker:
         config._reporter = ReportGenerator(config)
         config.pluginmanager.register(config._reporter)
 
