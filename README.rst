@@ -60,31 +60,33 @@ The template context
 
 The standard context available for all templates include the following:
 
-* ``config``: `Config <https://docs.pytest.org/en/latest/reference.html#_pytest.config.Config>`_
-* ``session``: `Session <https://docs.pytest.org/en/latest/reference.html#_pytest.main.Session>`_
-* ``started``: Unix timestamp
-* ``ended``: Unix timestamp
+* ``config``: `Config <https://docs.pytest.org/en/latest/reference.html#config>`_
+* ``session``: `Session <https://docs.pytest.org/en/latest/reference.html#session>`_
+* ``started``: Unix timestamp when session started
+* ``ended``: Unix timestamp when session was finished
 * ``warnings[]``: List of warnings.WarningMessage
-* ``tests[]``: List of dictionaries with the following keys:
+* ``tests[]``: List of each test run as dictionaries with the following keys:
 
-  * ``item``: `Item <https://docs.pytest.org/en/latest/reference.html#_pytest.nodes.Item>`_
-  * ``phases[]``: List of dictionaries with the following keys:
+  * ``item``: `Item <https://docs.pytest.org/en/latest/reference.html#item>`_
+  * ``phases[]``: List of each test phase (setup, call, teardown) as dictionaries
+    with the following keys:
 
-    * ``call``: `CallInfo <https://docs.pytest.org/en/latest/reference.html#_pytest.runner.CallInfo>`_
-    * ``report``: `TestReport <https://docs.pytest.org/en/latest/reference.html#_pytest.runner.TestReport>`_
+    * ``call``: `CallInfo <https://docs.pytest.org/en/latest/reference.html#callinfo>`_
+    * ``report``: `TestReport <https://docs.pytest.org/en/latest/reference.html#testreport>`_
     * ``log_records[]``: List of `logging.LogRecord <https://docs.python.org/3/library/logging.html#logging.LogRecord>`_
+      recorded during the test phase
     * ``status``: Dictionary with the following keys:
 
-      * ``category``: Category of the status or empty string
-      * ``letter``: Single letter version of status or empty string
-      * ``word``: Uppercase word version of status or empty string
+      * ``category``: Category of the status (e.g. ``"passed"``) or empty string
+      * ``letter``: Single letter version of status (e.g. ``"P"``) or empty string
+      * ``word``: Uppercase word version of status (e.g. ``"PASSED"``) or empty string
       * ``style``: Dictionary with e.g. ``{"yellow": True}`` or empty dictionary
 
   * ``status``: Dictionary with the following keys:
 
-    * ``category``: Category of the test status
-    * ``letter``: Single letter version of test status
-    * ``word``: Uppercase word version of test status
+    * ``category``: Category of the test status (e.g. ``"passed"``)
+    * ``letter``: Single letter version of test status (e.g. ``"P"``)
+    * ``word``: Uppercase word version of test status (e.g. ``"PASSED"``)
     * ``style``: Dictionary with e.g. ``{"yellow": True}`` or empty dictionary
 
 The context may be extended or modified using the following methods:
@@ -116,7 +118,6 @@ If you encounter any problems, please `file an issue`_ along with a detailed des
 .. _`MIT`: http://opensource.org/licenses/MIT
 .. _`file an issue`: https://github.com/christiansandberg/pytest-reporter/issues
 .. _`pytest`: https://github.com/pytest-dev/pytest
-.. _`tox`: https://tox.readthedocs.io/en/latest/
 .. _`pip`: https://pypi.org/project/pip/
 .. _`PyPI`: https://pypi.org/project
 .. _`hooks.py`: https://github.com/christiansandberg/pytest-reporter/blob/develop/pytest_reporter/hooks.py
