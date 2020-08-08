@@ -64,28 +64,28 @@ The standard context available for all templates include the following:
 * ``session``: `Session <https://docs.pytest.org/en/latest/reference.html#_pytest.main.Session>`_
 * ``started``: Unix timestamp
 * ``ended``: Unix timestamp
-* ``warnings``: List of warnings.WarningMessage
-* ``tests``: List of dictionaries with the following keys:
+* ``warnings[]``: List of warnings.WarningMessage
+* ``tests[]``: List of dictionaries with the following keys:
 
   * ``item``: `Item <https://docs.pytest.org/en/latest/reference.html#_pytest.nodes.Item>`_
-  * ``phases``: List of dictionaries with the following keys:
+  * ``phases[]``: List of dictionaries with the following keys:
 
     * ``call``: `CallInfo <https://docs.pytest.org/en/latest/reference.html#_pytest.runner.CallInfo>`_
     * ``report``: `TestReport <https://docs.pytest.org/en/latest/reference.html#_pytest.runner.TestReport>`_
-    * ``log_records``: List of `logging.LogRecord <https://docs.python.org/3/library/logging.html#logging.LogRecord>`_
+    * ``log_records[]``: List of `logging.LogRecord <https://docs.python.org/3/library/logging.html#logging.LogRecord>`_
     * ``status``: Dictionary with the following keys:
 
       * ``category``: Category of the status or empty string
       * ``letter``: Single letter version of status or empty string
       * ``word``: Uppercase word version of status or empty string
-      * ``style``: Dictionary with ``{"color": True}`` or empty dictionary
+      * ``style``: Dictionary with e.g. ``{"yellow": True}`` or empty dictionary
 
   * ``status``: Dictionary with the following keys:
 
     * ``category``: Category of the test status
     * ``letter``: Single letter version of test status
     * ``word``: Uppercase word version of test status
-    * ``style``: Dictionary with ``{"color": True}`` or empty dictionary
+    * ``style``: Dictionary with e.g. ``{"yellow": True}`` or empty dictionary
 
 The context may be extended or modified using the following methods:
 
