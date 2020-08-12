@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name='pytest-reporter',
-    version='0.3.0',
+    use_scm_version=True,
     author='Christian Sandberg',
     author_email='christiansandberg@me.com',
     maintainer='Christian Sandberg',
@@ -24,6 +24,7 @@ setup(
     long_description=read('README.rst'),
     packages=find_packages(),
     python_requires='>=3.5',
+    setup_requires=['setuptools_scm'],
     install_requires=[
         'pytest',
     ],
