@@ -69,7 +69,7 @@ def pytest_reporter_context(context, config):
                 "word": word,
                 "style": style,
             }
-            if letter or word or "status" not in test:
+            if letter or word:
                 test["status"] = phase["status"]
 
 
@@ -110,6 +110,12 @@ class ReportGenerator:
         self._active_test = {
             "item": self._active_item,
             "phases": [],
+            "status": {
+                "category": "unknown",
+                "letter": "?",
+                "word": "UNKNOWN",
+                "style": {},
+            },
         }
 
     def pytest_runtest_logfinish(self):
