@@ -65,14 +65,16 @@ The standard context available for all templates include the following:
 * ``started``: Unix timestamp when session started
 * ``ended``: Unix timestamp when session was finished
 * ``warnings[]``: List of warnings.WarningMessage
+* ``items``: Dictionary of collected items with nodeid as keys
 * ``tests[]``: List of each test run as dictionaries with the following keys:
 
   * ``item``: `Item <https://docs.pytest.org/en/latest/reference.html#item>`_
   * ``phases[]``: List of each test phase (setup, call, teardown) as dictionaries
     with the following keys:
 
-    * ``call``: `CallInfo <https://docs.pytest.org/en/latest/reference.html#callinfo>`_
+    * ``call`` (optional): `CallInfo <https://docs.pytest.org/en/latest/reference.html#callinfo>`_ if available.
     * ``report``: `TestReport <https://docs.pytest.org/en/latest/reference.html#testreport>`_
+    * ``sections``: Same as ``report.sections`` but only the sections captured for this phase
     * ``log_records[]``: List of `logging.LogRecord <https://docs.python.org/3/library/logging.html#logging.LogRecord>`_
       recorded during the test phase
     * ``status``: Dictionary with the following keys:
