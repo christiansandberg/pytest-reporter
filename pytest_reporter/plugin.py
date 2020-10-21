@@ -174,7 +174,7 @@ class ReportGenerator:
         self.context["tests"].append(testrun)
         del self._active_tests[nodeid]
 
-    def pytest_warning_captured(self, warning_message):
+    def pytest_warning_recorded(self, warning_message):
         self.context["warnings"].append(warning_message)
 
     def pytest_sessionfinish(self, session):
