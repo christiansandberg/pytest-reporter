@@ -49,6 +49,7 @@ This is a very basic Jinja2 template implementation:
         try:
             template = env.get_template(template_name)
         except TemplateNotFound:
+            # Don't know about this name, may be provided by some other template
             return
         return template.render(context)
 
@@ -77,14 +78,14 @@ The standard context available for all templates include the following:
     * ``sections``: Same as ``report.sections`` but only the sections captured for this phase
     * ``log_records[]``: List of `logging.LogRecord <https://docs.python.org/3/library/logging.html#logging.LogRecord>`_
       recorded during the test phase
-    * ``status``: Dictionary with the following keys:
+    * ``status``: Status of this phase. Dictionary with the following keys:
 
       * ``category``: Category of the status (e.g. ``"passed"``) or empty string
       * ``letter``: Single letter version of status (e.g. ``"P"``) or empty string
       * ``word``: Uppercase word version of status (e.g. ``"PASSED"``) or empty string
       * ``style``: Dictionary with e.g. ``{"yellow": True}`` or empty dictionary
 
-  * ``status``: Dictionary with the following keys:
+  * ``status``: Status of whole test. Dictionary with the following keys:
 
     * ``category``: Category of the test status (e.g. ``"passed"``)
     * ``letter``: Single letter version of test status (e.g. ``"P"``)
@@ -121,4 +122,4 @@ If you encounter any problems, please `file an issue`_ along with a detailed des
 .. _`pytest`: https://github.com/pytest-dev/pytest
 .. _`pip`: https://pypi.org/project/pip/
 .. _`PyPI`: https://pypi.org/project
-.. _`hooks.py`: https://github.com/christiansandberg/pytest-reporter/blob/develop/pytest_reporter/hooks.py
+.. _`hooks.py`: https://github.com/christiansandberg/pytest-reporter/blob/master/pytest_reporter/hooks.py
