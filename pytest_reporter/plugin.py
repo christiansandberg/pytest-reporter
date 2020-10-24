@@ -103,15 +103,6 @@ def template_context(pytestconfig):
     return pytestconfig.template_context
 
 
-@pytest.fixture(scope="function")
-def function_context(pytestconfig):
-    """Report template context for the current function."""
-    if hasattr(pytestconfig, "_reporter"):
-        return pytestconfig._reporter._active_test
-    else:
-        return {}
-
-
 class ReportGenerator:
     def __init__(self, config):
         self.config = config

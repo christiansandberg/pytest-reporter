@@ -95,7 +95,6 @@ The context may be extended or modified using the following methods:
 
 * ``config.template_context``
 * The ``template_context`` fixture
-* The ``function_context`` fixture (for the current ``tests`` item)
 * The ``pytest_reporter_context()``  hook
 
 
