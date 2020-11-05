@@ -6,6 +6,7 @@ import warnings
 from itertools import chain
 
 import pytest
+import _pytest.hookspec
 
 
 def pytest_addoption(parser):
@@ -165,8 +166,13 @@ class ReportGenerator:
         self.context["tests"].append(testrun)
         del self._active_tests[nodeid]
 
-    def pytest_warning_recorded(self, warning_message):
-        self.context["warnings"].append(warning_message)
+    # the pytest_warning_recorded hook was introduced in pytest 6.0
+    if hasattr(_pytest.hookspec, "pytest_warning_recorded"):
+        def pytest_warning_recorded(self, warning_message):
+            self.context["warnings"].append(warning_message)
+    else:
+        def pytest_warning_captured(self, warning_message):
+            self.context["warnings"].append(warning_message)
 
     def pytest_sessionfinish(self, session):
         self.context["ended"] = time.time()
