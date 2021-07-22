@@ -197,7 +197,7 @@ class ReportGenerator:
             # Save content to file
             target = Path(path)
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content)
+            target.write_text(content, "utf-8")
             config.hook.pytest_reporter_finish(
                 path=target, context=self.context, config=config
             )
