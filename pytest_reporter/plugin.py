@@ -115,10 +115,10 @@ class ReportGenerator:
         self._reports = set()
 
     def _get_testrun(self, nodeid):
-        testrun = self._active_tests.get(nodeid)
+        testrun = self._active_tests.get(nodeid.split('@', 1)[0])
         if testrun is None:
             testrun = {
-                "item": self._items.get(nodeid),
+                "item": self._items.get(nodeid.split('@', 1)[0]),
                 "phases": [],
             }
             self._active_tests[nodeid] = testrun
@@ -134,7 +134,7 @@ class ReportGenerator:
         self.context["items"] = self._items
 
     def pytest_runtest_logstart(self, nodeid):
-        testrun = self._get_testrun(nodeid)
+        testrun = self._get_testrun(nodeid.split('@', 1)[0])
         testrun["started"] = time.time()
 
     @pytest.hookimpl(hookwrapper=True)
@@ -164,7 +164,7 @@ class ReportGenerator:
         testrun = self._get_testrun(nodeid)
         testrun["ended"] = time.time()
         self.context["tests"].append(testrun)
-        del self._active_tests[nodeid]
+        del self._active_tests[nodeid.split('@', 1)[0]]
 
     # the pytest_warning_recorded hook was introduced in pytest 6.0
     if hasattr(_pytest.hookspec, "pytest_warning_recorded"):
