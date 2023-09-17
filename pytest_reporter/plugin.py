@@ -1,4 +1,3 @@
-import collections
 from pathlib import Path
 import logging
 import time
@@ -114,11 +113,15 @@ class ReportGenerator:
         self._log_handler = LogHandler()
         self._reports = set()
 
-    def _get_testrun(self, nodeid):
+    def _get_testrun(self, nodeid: str):
         testrun = self._active_tests.get(nodeid)
         if testrun is None:
+            item = self._items.get(nodeid)
+            if item is None:
+                # pytest-xdist may add node specific suffix
+                item = self._items.get(nodeid.split("@", maxsplit=1)[0])
             testrun = {
-                "item": self._items.get(nodeid),
+                "item": item,
                 "phases": [],
             }
             self._active_tests[nodeid] = testrun

@@ -68,6 +68,39 @@ def test_tests(testdir, get_context):
         assert phase["report"].outcome == "passed"
 
 
+def test_xdist_loadgroup(testdir):
+    testdir.makepyfile(
+        """
+    import pytest
+
+    @pytest.mark.xdist_group("group1")
+    def test_pass(): pass
+    """)
+
+    hooks = testdir.inline_run(
+        "--template=dummy.txt", "--report=report.txt", "-n=1", "--dist=loadgroup"
+    )
+    context = hooks.getcall("pytest_reporter_render").context
+
+    assert "tests" in context
+    assert len(context["tests"]) == 1
+    test = context["tests"][0]
+
+    assert "item" in test
+    assert isinstance(test["item"], _pytest.nodes.Item)
+    assert test["item"].name == "test_pass"
+
+    assert "phases" in test
+    assert len(test["phases"]) == 3
+    for phase, when in zip(test["phases"], ["setup", "call", "teardown"]):
+        assert "report" in phase
+        assert "log_records" in phase
+        assert "status" in phase
+
+        assert phase["report"].when == when
+        assert phase["report"].outcome == "passed"
+
+
 def test_status(testdir, get_context):
     testdir.makepyfile(
         """
