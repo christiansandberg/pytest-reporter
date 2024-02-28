@@ -23,7 +23,7 @@ setup(
     description='Generate Pytest reports with templates',
     long_description=read('README.rst'),
     packages=find_packages(),
-    python_requires='>=3.5',
+    python_requires='>=3.8',
     setup_requires=['setuptools_scm'],
     install_requires=[
         'pytest',
