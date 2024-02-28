@@ -51,7 +51,7 @@ def pytest_configure(config):
 @pytest.hookimpl(hookwrapper=True)
 def pytest_collection(session):
     yield
-    if not hasattr(session, "items") and hasattr(session.config, "_reporter"):
+    if not getattr(session, "items", []) and hasattr(session.config, "_reporter"):
         # Collection was skipped (probably due to xdist)
         session.perform_collect()
 
