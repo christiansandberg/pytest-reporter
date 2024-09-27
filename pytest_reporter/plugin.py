@@ -47,11 +47,15 @@ def pytest_configure(config):
         config._reporter = ReportGenerator(config)
         config.pluginmanager.register(config._reporter)
 
+@pytest.hookimpl(tryfirst=True)
+def pytest_collectstart(collector):
+    if isinstance(collector, pytest.Session):
+        collector.collected=True
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_collection(session):
     yield
-    if not getattr(session, "items", []) and hasattr(session.config, "_reporter"):
+    if not getattr(session, "collected", False) and hasattr(session.config, "_reporter"):
         # Collection was skipped (probably due to xdist)
         session.perform_collect()
 
